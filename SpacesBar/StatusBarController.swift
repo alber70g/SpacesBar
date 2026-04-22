@@ -5,9 +5,11 @@ final class StatusBarController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var currentTitle = "Loading..."
     var onToggleHideEmptySpaces: ((Bool) -> Void)?
+    var onSelectIconStyle: ((IconStyle) -> Void)?
     private weak var hideEmptySpacesItem: NSMenuItem?
+    private var iconStyleItems: [IconStyle: NSMenuItem] = [:]
 
-    func install(hideEmptySpaces: Bool) {
+    func install(config: AppConfig) {
         let menu = NSMenu()
         let hideEmptySpacesItem = NSMenuItem(
             title: "Hide Empty Spaces",
@@ -15,7 +17,23 @@ final class StatusBarController: NSObject {
             keyEquivalent: ""
         )
         hideEmptySpacesItem.target = self
-        hideEmptySpacesItem.state = hideEmptySpaces ? .on : .off
+        hideEmptySpacesItem.state = config.hideEmptySpaces ? .on : .off
+
+        let iconStyleItem = NSMenuItem(title: "Icon Style", action: nil, keyEquivalent: "")
+        let iconStyleMenu = NSMenu()
+        for style in IconStyle.allCases {
+            let item = NSMenuItem(
+                title: style.menuTitle,
+                action: #selector(selectIconStyle(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = style.rawValue
+            item.state = style == config.iconStyle ? .on : .off
+            iconStyleMenu.addItem(item)
+            iconStyleItems[style] = item
+        }
+        menu.setSubmenu(iconStyleMenu, for: iconStyleItem)
 
         let copyItem = NSMenuItem(
             title: "Copy Current Output",
@@ -25,6 +43,7 @@ final class StatusBarController: NSObject {
         copyItem.target = self
 
         menu.addItem(hideEmptySpacesItem)
+        menu.addItem(iconStyleItem)
         menu.addItem(.separator())
         menu.addItem(copyItem)
         menu.addItem(.separator())
@@ -72,5 +91,21 @@ final class StatusBarController: NSObject {
         let nextState: NSControl.StateValue = hideEmptySpacesItem.state == .on ? .off : .on
         hideEmptySpacesItem.state = nextState
         onToggleHideEmptySpaces?(nextState == .on)
+    }
+
+    @objc
+    private func selectIconStyle(_ sender: NSMenuItem) {
+        guard
+            let rawValue = sender.representedObject as? String,
+            let selectedStyle = IconStyle(rawValue: rawValue)
+        else {
+            return
+        }
+
+        for (style, item) in iconStyleItems {
+            item.state = style == selectedStyle ? .on : .off
+        }
+
+        onSelectIconStyle?(selectedStyle)
     }
 }

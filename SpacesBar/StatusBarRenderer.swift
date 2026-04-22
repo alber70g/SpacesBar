@@ -9,6 +9,7 @@ struct StatusBarPresentation {
 enum StatusBarRenderer {
     private static let iconPointSize: CGFloat = 26
     private static let iconVerticalOffset: CGFloat = -8
+    private static let focusedIconVerticalOffset: CGFloat = -11
 
     @MainActor
     static func render(
@@ -36,7 +37,7 @@ enum StatusBarRenderer {
             attributedTitle.append(
                 NSAttributedString(
                     string: space.displayLabel,
-                    attributes: baseTextAttributes
+                    attributes: textAttributes(for: space)
                 )
             )
 
@@ -52,10 +53,14 @@ enum StatusBarRenderer {
                 }
 
                 let attachment = NSTextAttachment()
-                attachment.image = iconCache.icon(for: app, pointSize: iconPointSize)
+                attachment.image = iconCache.icon(
+                    for: app,
+                    pointSize: iconPointSize,
+                    style: options.iconStyle
+                )
                 attachment.bounds = NSRect(
                     x: 0,
-                    y: iconVerticalOffset,
+                    y: app.isFocused ? focusedIconVerticalOffset : iconVerticalOffset,
                     width: iconPointSize,
                     height: iconPointSize
                 )
@@ -91,6 +96,18 @@ enum StatusBarRenderer {
         [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular),
             .foregroundColor: NSColor.labelColor
+        ]
+    }
+
+    @MainActor
+    private static func textAttributes(for space: SpaceSnapshot) -> [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.monospacedDigitSystemFont(
+                ofSize: 13,
+                weight: space.isFocused ? .semibold : .regular
+            ),
+            .foregroundColor: NSColor.labelColor,
+            .underlineStyle: space.isFocused ? NSUnderlineStyle.single.rawValue : 0
         ]
     }
 }

@@ -17,6 +17,7 @@ struct AppSnapshot: Equatable, Hashable, Sendable {
     let pid: Int?
     let displayName: String
     let bundlePath: String?
+    let isFocused: Bool
 }
 
 extension AppSnapshot {

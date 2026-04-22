@@ -36,18 +36,25 @@ struct YabaiBackend: Backend {
     }
 
     nonisolated private func deduplicatedApps(from windows: [ReducedWindow]) -> [AppSnapshot] {
-        var seenKeys = Set<String>()
-        var apps: [AppSnapshot] = []
+        var appsByKey: [String: AppSnapshot] = [:]
 
         for window in windows {
-            guard seenKeys.insert(window.app.deduplicationKey).inserted else {
-                continue
-            }
+            let key = window.app.deduplicationKey
 
-            apps.append(window.app)
+            if let existing = appsByKey[key] {
+                appsByKey[key] = AppSnapshot(
+                    bundleID: existing.bundleID,
+                    pid: existing.pid,
+                    displayName: existing.displayName,
+                    bundlePath: existing.bundlePath,
+                    isFocused: existing.isFocused || window.app.isFocused
+                )
+            } else {
+                appsByKey[key] = window.app
+            }
         }
 
-        return apps.sorted {
+        return appsByKey.values.sorted {
             $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
         }
     }
@@ -68,7 +75,8 @@ struct YabaiBackend: Backend {
             bundleID: runningApplication?.bundleIdentifier,
             pid: window.pid,
             displayName: displayName,
-            bundlePath: runningApplication?.bundleURL?.path
+            bundlePath: runningApplication?.bundleURL?.path,
+            isFocused: window.hasFocus
         )
 
         return ReducedWindow(spaceIndex: spaceIndex, app: app)
@@ -94,6 +102,14 @@ private struct YabaiSpace: Decodable {
 
 private struct YabaiWindow: Decodable {
     let app: String?
+    let hasFocus: Bool
     let pid: Int?
     let space: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case app
+        case hasFocus = "has-focus"
+        case pid
+        case space
+    }
 }

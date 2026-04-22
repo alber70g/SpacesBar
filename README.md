@@ -44,6 +44,8 @@ Every push to `master` republishes a rolling [`dev` prerelease](https://github.c
 
 ## Configuration
 
+<img width="474" height="160" alt="configuration" src="https://github.com/user-attachments/assets/1634d6b5-9202-4638-8d41-1699895b6239" />
+
 On first launch SpacesBar writes defaults to `~/.config/spacesbar.json`:
 
 ```json

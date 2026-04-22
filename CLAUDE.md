@@ -7,7 +7,7 @@ Spacesbar is a lightweight macOS menu bar application that shows which apps are 
 
 Example output:
 
-`1 [Chrome] [WhatsApp] | 2 [VS Code] [iTerm2] | 3 | 4 | 5 [LM Studio]`
+`1 [Chrome] [WhatsApp]  2 [VS Code] [iTerm2]  5 [LM Studio]`
 
 The project is open source and optimized for low CPU and memory usage. It is not intended for the Mac App Store. It relies on external window manager backends to provide space/workspace membership information.
 
@@ -18,7 +18,7 @@ Build a tiny native macOS status bar app that renders:
 * a stable ordered list of spaces/workspaces
 * each space/workspace number or label
 * zero or more app icons for apps present on that space/workspace
-* a compact separator between spaces/workspaces
+* compact spacing between spaces/workspaces
 
 ## Non-Goals for v1
 
@@ -63,7 +63,7 @@ Rules:
 * Render spaces/workspaces left to right in stable sorted order
 * For each space/workspace, render the identifier followed by app icons for unique apps on that space/workspace
 * Empty spaces/workspaces render only the identifier
-* Separate spaces/workspaces with `|`
+* Separate spaces/workspaces visually with spacing; a literal separator is optional
 * Do not show duplicate app icons within the same space/workspace
 * Prefer app icons from the actual application bundle
 * Support icon rendering styles:
@@ -303,7 +303,7 @@ Rendering rules:
 * each space/workspace segment begins with the label
 * icons follow with tight spacing
 * icons should be visually aligned to text baseline
-* separator between segments is literal `|`
+* separator between segments may be omitted if spacing keeps segments readable
 * no truncation logic needed for first milestone if output fits typical menu bar width
 * implement later overflow strategy if needed
 
@@ -352,11 +352,17 @@ Cache processed icons by:
 
 * all icon processing must happen off the main thread when possible
 * final UI application must happen on the main thread
-* processed icons should be small, e.g. 12pt to 14pt target
+* processed icons should be rasterized to the exact target display size and cached
 
 ## Configuration
 
 Initial configuration can be file-based.
+
+Current shipped menu options:
+
+* Copy Current Output
+* Hide Empty Spaces toggle, unchecked by default
+* Quit SpacesBar
 
 Suggested config fields:
 
@@ -450,7 +456,7 @@ spacesbar/
 * Launch as menu bar app
 * Select one backend at startup
 * Fetch snapshot manually on launch and every fallback interval
-* Render spaces/workspaces and icons in menu bar
+* Render Yabai spaces and app icons in menu bar
 * Cache icons
 
 ### Milestone 2
@@ -469,7 +475,7 @@ spacesbar/
 ## Acceptance Criteria for v1
 
 * With Yabai configured, the app renders all current native spaces by numeric index and deduplicated app icons per space
-* With AeroSpace configured, the app renders all current workspaces and deduplicated app icons per workspace
+* AeroSpace support may land after the initial Yabai-first v1 slice
 * Idle CPU stays low and no high-frequency polling is used
 * Repeated identical snapshots do not trigger rerender
 * App icons are loaded from real application metadata whenever possible
@@ -477,10 +483,10 @@ spacesbar/
 
 ## Open Questions
 
-1. Should v1 ship Yabai only, then add AeroSpace later?
+1. Yabai-first is the current v1 direction; AeroSpace follows later.
 2. Should workspace labels in AeroSpace mode be rendered raw or normalized?
 3. Should focused app appear first within a space/workspace if known?
-4. Do we want a tiny dropdown menu for refresh / quit / backend status in v1?
+4. A tiny dropdown menu is already in use for copy, hide-empty-spaces, and quit.
 5. Is attributed-string rendering sufficient, or should we start with a custom status item view?
 
 ## Codex Tasking Notes
@@ -493,4 +499,3 @@ When implementing this spec:
 * write tests for reduction logic before polishing UI
 * optimize for low render churn and icon cache reuse
 * keep backend-specific semantics out of the renderer
-

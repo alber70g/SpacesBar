@@ -3,6 +3,8 @@ import UniformTypeIdentifiers
 
 @MainActor
 final class IconCache {
+    private static let supersampleScale: CGFloat = 2
+
     private var imagesByKey: [String: NSImage] = [:]
 
     func icon(for app: AppSnapshot, pointSize: CGFloat) -> NSImage {
@@ -37,9 +39,49 @@ final class IconCache {
     }
 
     private func preparedIcon(from image: NSImage, pointSize: CGFloat) -> NSImage {
-        let icon = (image.copy() as? NSImage) ?? image
+        let size = NSSize(width: pointSize, height: pointSize)
+        let supersampledSize = NSSize(
+            width: pointSize * Self.supersampleScale,
+            height: pointSize * Self.supersampleScale
+        )
+        let supersampledRect = NSRect(origin: .zero, size: supersampledSize)
+
+        let supersampledIcon = NSImage(size: supersampledSize)
+        supersampledIcon.isTemplate = false
+        supersampledIcon.lockFocus()
+        NSGraphicsContext.current?.imageInterpolation = .high
+
+        if let representation = image.bestRepresentation(
+            for: supersampledRect,
+            context: NSGraphicsContext.current,
+            hints: nil
+        ) {
+            representation.draw(in: supersampledRect)
+        } else {
+            image.draw(
+                in: supersampledRect,
+                from: .zero,
+                operation: .copy,
+                fraction: 1
+            )
+        }
+
+        supersampledIcon.unlockFocus()
+
+        let icon = NSImage(size: size)
         icon.isTemplate = false
-        icon.size = NSSize(width: pointSize, height: pointSize)
+
+        icon.lockFocus()
+        defer { icon.unlockFocus() }
+
+        NSGraphicsContext.current?.imageInterpolation = .high
+        supersampledIcon.draw(
+            in: NSRect(origin: .zero, size: size),
+            from: supersampledRect,
+            operation: .copy,
+            fraction: 1
+        )
+
         return icon
     }
 }

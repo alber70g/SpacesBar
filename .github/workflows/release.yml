@@ -118,6 +118,13 @@ jobs:
 
             app "SpacesBar.app"
 
+            zap trash: [
+              "~/.config/spacesbar.json",
+              "~/Library/Application Support/SpacesBar",
+              "~/Library/Logs/SpacesBar",
+              "~/Library/Preferences/nl.upgraide.SpacesBar.plist",
+            ]
+
             caveats <<~CAVEATS
               SpacesBar is unsigned, so macOS Gatekeeper will block it on first launch.
 
@@ -125,13 +132,6 @@ jobs:
 
                 xattr -dr com.apple.quarantine /Applications/SpacesBar.app
             CAVEATS
-
-            zap trash: [
-              "~/.config/spacesbar.json",
-              "~/Library/Application Support/SpacesBar",
-              "~/Library/Logs/SpacesBar",
-              "~/Library/Preferences/nl.upgraide.SpacesBar.plist",
-            ]
           end
           EOF
 

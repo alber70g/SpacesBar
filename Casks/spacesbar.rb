@@ -12,6 +12,13 @@ cask "spacesbar" do
 
   app "SpacesBar.app"
 
+  zap trash: [
+    "~/.config/spacesbar.json",
+    "~/Library/Application Support/SpacesBar",
+    "~/Library/Logs/SpacesBar",
+    "~/Library/Preferences/nl.upgraide.SpacesBar.plist",
+  ]
+
   caveats <<~EOS
     SpacesBar is unsigned, so macOS Gatekeeper will block it on first launch.
 
@@ -19,11 +26,4 @@ cask "spacesbar" do
 
       xattr -dr com.apple.quarantine /Applications/SpacesBar.app
   EOS
-
-  zap trash: [
-    "~/.config/spacesbar.json",
-    "~/Library/Application Support/SpacesBar",
-    "~/Library/Logs/SpacesBar",
-    "~/Library/Preferences/nl.upgraide.SpacesBar.plist",
-  ]
 end

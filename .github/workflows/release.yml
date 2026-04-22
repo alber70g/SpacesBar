@@ -85,14 +85,25 @@ jobs:
         continue-on-error: true
         id: clone
 
-      - name: Update cask
+      - name: Open pull request
         if: steps.clone.outcome == 'success'
+        working-directory: tap
         env:
+          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
           VERSION: ${{ needs.build.outputs.version }}
           SHA256: ${{ needs.build.outputs.sha256 }}
         run: |
-          mkdir -p tap/Casks
-          cat > tap/Casks/spacesbar.rb <<EOF
+          set -euo pipefail
+          BRANCH="bump/spacesbar-${VERSION}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Always start fresh from main — the bump branch is bot-owned and overwritten each run.
+          git checkout -B "$BRANCH" origin/main
+
+          mkdir -p Casks
+          cat > Casks/spacesbar.rb <<EOF
           cask "spacesbar" do
             version "${VERSION}"
             sha256 "${SHA256}"
@@ -116,34 +127,17 @@ jobs:
           end
           EOF
 
-      - name: Open pull request
-        if: steps.clone.outcome == 'success'
-        working-directory: tap
-        env:
-          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
-          VERSION: ${{ needs.build.outputs.version }}
-          SHA256: ${{ needs.build.outputs.sha256 }}
-        run: |
-          set -euo pipefail
-          BRANCH="bump/spacesbar-${VERSION}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Reuse existing branch if a previous attempt already opened the PR.
-          git fetch origin "$BRANCH" 2>/dev/null && git checkout "$BRANCH" || git checkout -b "$BRANCH"
-
           git add Casks/spacesbar.rb
           if git diff --cached --quiet; then
-            echo "No cask changes."
+            echo "No cask changes vs main."
             exit 0
           fi
 
           git commit -m "spacesbar ${VERSION}"
-          git push -u origin "$BRANCH"
+          git push --force origin "$BRANCH"
 
           if gh pr view "$BRANCH" >/dev/null 2>&1; then
-            echo "PR for $BRANCH already exists."
+            echo "PR for $BRANCH already exists — branch updated."
             exit 0
           fi
 

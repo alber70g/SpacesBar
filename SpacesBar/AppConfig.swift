@@ -1,18 +1,27 @@
 import Foundation
 
 enum IconStyle: String, Codable, CaseIterable, Sendable {
-    case native
-    case template
-    case softMono
+    case colored
+    case monochrome
 
     var menuTitle: String {
         switch self {
-        case .native:
-            "Native"
-        case .template:
-            "Template"
-        case .softMono:
-            "Soft Mono"
+        case .colored:
+            "Colored"
+        case .monochrome:
+            "Monochrome"
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        switch raw {
+        case "colored", "native", "template":
+            self = .colored
+        case "monochrome", "softMono":
+            self = .monochrome
+        default:
+            self = .colored
         }
     }
 }
@@ -24,7 +33,7 @@ struct AppConfig: Codable, Equatable, Sendable {
 
     static let `default` = AppConfig(
         hideEmptySpaces: false,
-        iconStyle: .native,
+        iconStyle: .colored,
         refreshFallbackSeconds: 5
     )
 

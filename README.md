@@ -56,12 +56,12 @@ On first launch SpacesBar writes defaults to `~/.config/spacesbar.json`:
 ```json
 {
   "hideEmptySpaces": false,
-  "iconStyle": "native",
+  "iconStyle": "colored",
   "refreshFallbackSeconds": 5
 }
 ```
 
-- `iconStyle`: `native` · `template` · `softMono`
+- `iconStyle`: `colored` · `monochrome`
 - `hideEmptySpaces`: hide spaces with no apps
 - `refreshFallbackSeconds`: safety-net poll interval (event-driven refresh is primary)
 

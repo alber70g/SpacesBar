@@ -96,16 +96,9 @@ final class IconCache {
 
     private func styledIcon(from image: NSImage, style: IconStyle) -> NSImage {
         switch style {
-        case .native:
+        case .colored:
             return image
-        case .template:
-            guard let copy = image.copy() as? NSImage else {
-                return image
-            }
-
-            copy.isTemplate = true
-            return copy
-        case .softMono:
+        case .monochrome:
             return softMonochromeIcon(from: image)
         }
     }

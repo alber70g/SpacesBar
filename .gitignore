@@ -1,1 +1,15 @@
 .derived
+.DS_Store
+
+# Xcode
+build/
+dist/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.moved-aside
+build.log
+
+# Logs / caches
+.code-review-graph/

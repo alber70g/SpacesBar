@@ -82,7 +82,7 @@ enum StatusBarRenderer {
             return snapshot.spaces
         }
 
-        return snapshot.spaces.filter { !$0.apps.isEmpty }
+        return snapshot.spaces.filter { !$0.apps.isEmpty || $0.isFocused }
     }
 
     nonisolated private static func renderPlainTextSpace(_ space: SpaceSnapshot) -> String {

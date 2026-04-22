@@ -1,0 +1,63 @@
+name: Dev build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: dev-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unsigned .app
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Print Xcode version
+        run: xcodebuild -version
+
+      - name: Compute version
+        id: version
+        run: |
+          SHORT_SHA="$(git rev-parse --short HEAD)"
+          echo "version=0.0.0-dev.${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: scripts/build-app.sh "${{ steps.version.outputs.version }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpacesBar-${{ steps.version.outputs.version }}-arm64
+          path: dist/*.zip
+          if-no-files-found: error
+
+      - name: Publish rolling dev prerelease
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev
+          name: "Dev (latest master)"
+          body: |
+            Rolling unsigned build from `master`. Overwritten on every push.
+
+            Commit: `${{ github.sha }}`
+            Version: `${{ steps.version.outputs.version }}`
+
+            ⚠️ Unsigned. After downloading run:
+            ```sh
+            xattr -dr com.apple.quarantine /Applications/SpacesBar.app
+            ```
+          prerelease: true
+          make_latest: false
+          files: dist/*.zip

@@ -1,0 +1,132 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.2.3)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build, release, and bump tap
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+      tag: ${{ steps.vars.outputs.tag }}
+      sha256: ${{ steps.hash.outputs.sha256 }}
+      zip: ${{ steps.hash.outputs.zip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Derive version
+        id: vars
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build SpacesBar.app
+        run: scripts/build-app.sh "${{ steps.vars.outputs.version }}"
+
+      - name: Compute SHA256
+        id: hash
+        run: |
+          ZIP="dist/SpacesBar-${{ steps.vars.outputs.version }}-arm64.zip"
+          SHA=$(shasum -a 256 "$ZIP" | awk '{print $1}')
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: ${{ steps.vars.outputs.tag }}
+          generate_release_notes: true
+          body: |
+            Unsigned build. After downloading:
+            ```sh
+            xattr -dr com.apple.quarantine /Applications/SpacesBar.app
+            ```
+
+            Or via Homebrew:
+            ```sh
+            brew tap alber70g/tap
+            brew install --cask spacesbar
+            ```
+
+            SHA256: `${{ steps.hash.outputs.sha256 }}`
+          files: |
+            dist/*.zip
+            dist/*.sha256
+
+  bump-cask:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tap
+        uses: actions/checkout@v4
+        with:
+          repository: alber70g/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: tap
+        continue-on-error: true
+        id: clone
+
+      - name: Update cask
+        if: steps.clone.outcome == 'success'
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          SHA256: ${{ needs.build.outputs.sha256 }}
+        run: |
+          mkdir -p tap/Casks
+          cat > tap/Casks/spacesbar.rb <<EOF
+          cask "spacesbar" do
+            version "${VERSION}"
+            sha256 "${SHA256}"
+
+            url "https://github.com/alber70g/SpacesBar/releases/download/v#{version}/SpacesBar-#{version}-arm64.zip"
+            name "SpacesBar"
+            desc "Menu bar app showing apps per macOS space"
+            homepage "https://github.com/alber70g/SpacesBar"
+
+            depends_on macos: ">= :tahoe"
+            depends_on arch: :arm64
+
+            app "SpacesBar.app"
+
+            zap trash: [
+              "~/.config/spacesbar.json",
+              "~/Library/Application Support/SpacesBar",
+              "~/Library/Logs/SpacesBar",
+              "~/Library/Preferences/nl.upgraide.SpacesBar.plist",
+            ]
+          end
+          EOF
+
+      - name: Commit and push
+        if: steps.clone.outcome == 'success'
+        working-directory: tap
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/spacesbar.rb
+          if git diff --cached --quiet; then
+            echo "No cask changes."
+            exit 0
+          fi
+          git commit -m "spacesbar ${VERSION}"
+          git push

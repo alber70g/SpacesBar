@@ -8,6 +8,10 @@ final class SnapshotStore {
         lastSnapshot != nil
     }
 
+    var snapshot: BackendSnapshot? {
+        lastSnapshot
+    }
+
     func consume(_ snapshot: BackendSnapshot) -> Bool {
         guard lastSnapshot != snapshot else {
             return false

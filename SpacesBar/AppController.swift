@@ -5,16 +5,21 @@ final class AppController {
     private let backend: any Backend
     private let snapshotStore = SnapshotStore()
     private let statusBarController = StatusBarController()
+    private let iconCache = IconCache()
+    private var renderOptions = StatusBarRenderOptions()
 
     private var refreshTimer: Timer?
     private var isRefreshing = false
 
     init(backend: any Backend = BackendSelector.selectStartupBackend()) {
         self.backend = backend
+        statusBarController.onToggleHideEmptySpaces = { [weak self] hideEmptySpaces in
+            self?.updateHideEmptySpaces(hideEmptySpaces)
+        }
     }
 
     func start() {
-        statusBarController.install()
+        statusBarController.install(hideEmptySpaces: renderOptions.hideEmptySpaces)
         refresh()
         startRefreshTimer()
     }
@@ -48,8 +53,7 @@ final class AppController {
                     }
 
                     if self.snapshotStore.consume(snapshot) {
-                        let title = StatusBarRenderer.render(snapshot)
-                        self.statusBarController.show(title: title)
+                        self.showSnapshot(snapshot)
                     }
 
                     self.isRefreshing = false
@@ -68,5 +72,24 @@ final class AppController {
                 }
             }
         }
+    }
+
+    private func updateHideEmptySpaces(_ hideEmptySpaces: Bool) {
+        renderOptions.hideEmptySpaces = hideEmptySpaces
+
+        guard let snapshot = snapshotStore.snapshot else {
+            return
+        }
+
+        showSnapshot(snapshot)
+    }
+
+    private func showSnapshot(_ snapshot: BackendSnapshot) {
+        let presentation = StatusBarRenderer.render(
+            snapshot,
+            iconCache: iconCache,
+            options: renderOptions
+        )
+        statusBarController.show(presentation: presentation)
     }
 }

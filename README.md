@@ -4,6 +4,13 @@ Lightweight macOS menu bar app that shows which apps are active on which macOS s
 
 `1 [Chrome] [WhatsApp]  2 [VS Code] [iTerm2]  5 [LM Studio]`
 
+|     |     |
+| --- | --- | 
+| Colors, including empty | <img width="474" height="30" alt="full-color" src="https://github.com/user-attachments/assets/e19e45d9-c477-40a0-a27d-a17e340d35a9" /> |
+| Colors, excluding empty | <img width="474" height="30" alt="active-color" src="https://github.com/user-attachments/assets/cc1f72d8-ee38-4592-a895-2096ced1831d" /> |
+| Mono, including empty   | <img width="474" height="30" alt="full-mono" src="https://github.com/user-attachments/assets/a987e74c-278b-407a-a9eb-f70112ef5689" /> |
+| Mono, excluding empty   | <img width="474" height="30" alt="active-mono" src="https://github.com/user-attachments/assets/55dc3fc0-cf6f-4769-bf18-90cc2daaa101" /> |
+
 ## Requirements
 
 - macOS 26.2 (Tahoe) or later

@@ -12,6 +12,14 @@ cask "spacesbar" do
 
   app "SpacesBar.app"
 
+  caveats <<~EOS
+    SpacesBar is unsigned, so macOS Gatekeeper will block it on first launch.
+
+    Remove the quarantine attribute manually before first launch:
+
+      xattr -dr com.apple.quarantine /Applications/SpacesBar.app
+  EOS
+
   zap trash: [
     "~/.config/spacesbar.json",
     "~/Library/Application Support/SpacesBar",

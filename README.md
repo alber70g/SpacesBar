@@ -120,7 +120,7 @@ open build/Build/Products/Release/SpacesBar.app
    git push origin v1.2.3
    ```
 
-3. The `release` workflow builds `SpacesBar-<version>-arm64.zip`, attaches it to a GitHub Release, and — if `TAP_GITHUB_TOKEN` is configured — commits an updated `Casks/spacesbar.rb` to [`alber70g/homebrew-tap`](https://github.com/alber70g/homebrew-tap).
+3. The `release` workflow builds `SpacesBar-<version>-arm64.zip`, attaches it to a GitHub Release, and — if `TAP_GITHUB_TOKEN` is configured — opens a `bump/spacesbar-<version>` pull request against [`alber70g/homebrew-tap`](https://github.com/alber70g/homebrew-tap) updating `Casks/spacesbar.rb`. Merge the PR to publish the new version on the tap.
 
 To set up the Homebrew tap the first time:
 
@@ -131,7 +131,7 @@ cp /path/to/SpacesBar/Casks/spacesbar.rb Casks/spacesbar.rb
 git add Casks/spacesbar.rb && git commit -m "Add spacesbar cask" && git push
 ```
 
-Then create a fine-grained PAT with `contents:write` for `alber70g/homebrew-tap` and add it to this repo's Actions secrets as `TAP_GITHUB_TOKEN`. If the secret is missing the release still publishes — only the tap bump is skipped.
+Then create a fine-grained PAT scoped to `alber70g/homebrew-tap` with permissions **Contents: Read and write** and **Pull requests: Read and write**, and add it to this repo's Actions secrets as `TAP_GITHUB_TOKEN`. If the secret is missing the release still publishes — only the tap PR is skipped.
 
 ## License
 

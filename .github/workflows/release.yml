@@ -81,6 +81,7 @@ jobs:
           repository: alber70g/homebrew-tap
           token: ${{ secrets.TAP_GITHUB_TOKEN }}
           path: tap
+          fetch-depth: 0
         continue-on-error: true
         id: clone
 
@@ -115,18 +116,42 @@ jobs:
           end
           EOF
 
-      - name: Commit and push
+      - name: Open pull request
         if: steps.clone.outcome == 'success'
         working-directory: tap
         env:
+          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
           VERSION: ${{ needs.build.outputs.version }}
+          SHA256: ${{ needs.build.outputs.sha256 }}
         run: |
+          set -euo pipefail
+          BRANCH="bump/spacesbar-${VERSION}"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Reuse existing branch if a previous attempt already opened the PR.
+          git fetch origin "$BRANCH" 2>/dev/null && git checkout "$BRANCH" || git checkout -b "$BRANCH"
+
           git add Casks/spacesbar.rb
           if git diff --cached --quiet; then
             echo "No cask changes."
             exit 0
           fi
+
           git commit -m "spacesbar ${VERSION}"
-          git push
+          git push -u origin "$BRANCH"
+
+          if gh pr view "$BRANCH" >/dev/null 2>&1; then
+            echo "PR for $BRANCH already exists."
+            exit 0
+          fi
+
+          gh pr create \
+            --title "spacesbar ${VERSION}" \
+            --body "Automated cask bump for [SpacesBar v${VERSION}](https://github.com/alber70g/SpacesBar/releases/tag/v${VERSION}).
+
+            - version: \`${VERSION}\`
+            - sha256: \`${SHA256}\`" \
+            --base main \
+            --head "$BRANCH"

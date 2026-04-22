@@ -32,9 +32,14 @@ brew install --cask spacesbar
 2. Unzip and move `SpacesBar.app` to `/Applications`.
 3. Because the build is unsigned, macOS Gatekeeper will block it on first launch. Remove the quarantine attribute:
 
-   ```sh
-   xattr -dr com.apple.quarantine /Applications/SpacesBar.app
-   ```
+   - rightclick the **SpacesBar.app** and click **open**
+
+     **or**
+
+   - run this shell command
+     ```sh
+     xattr -dr com.apple.quarantine /Applications/SpacesBar.app
+     ```
 
 4. Open the app. It will appear in the menu bar with no Dock icon.
 

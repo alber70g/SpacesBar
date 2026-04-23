@@ -24,6 +24,8 @@ Lightweight macOS menu bar app that shows which apps are active on which macOS s
 ```sh
 brew tap alber70g/tap
 brew install --cask spacesbar
+# the app is unsigned so remove the quarantine attribute
+xattr -dr com.apple.quarantine /Applications/SpacesBar.app
 ```
 
 ### Manual (zip)
@@ -31,10 +33,6 @@ brew install --cask spacesbar
 1. Download the latest `SpacesBar-<version>-arm64.zip` from [Releases](https://github.com/alber70g/SpacesBar/releases).
 2. Unzip and move `SpacesBar.app` to `/Applications`.
 3. Because the build is unsigned, macOS Gatekeeper will block it on first launch. Remove the quarantine attribute:
-
-   - rightclick the **SpacesBar.app** and click **open**
-
-     **or**
 
    - run this shell command
      ```sh

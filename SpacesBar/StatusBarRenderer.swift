@@ -78,6 +78,10 @@ enum StatusBarRenderer {
         in snapshot: BackendSnapshot,
         options: StatusBarRenderOptions
     ) -> [SpaceSnapshot] {
+        if options.minimize, let focusedSpace = snapshot.spaces.first(where: \.isFocused) {
+            return [focusedSpace]
+        }
+
         guard options.hideEmptySpaces else {
             return snapshot.spaces
         }

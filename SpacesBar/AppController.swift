@@ -17,10 +17,14 @@ final class AppController {
         self.backend = backend
         configStore.load()
         renderOptions.hideEmptySpaces = configStore.config.hideEmptySpaces
+        renderOptions.minimize = configStore.config.minimize
         renderOptions.iconStyle = configStore.config.iconStyle
 
         statusBarController.onToggleHideEmptySpaces = { [weak self] hideEmptySpaces in
             self?.updateHideEmptySpaces(hideEmptySpaces)
+        }
+        statusBarController.onToggleMinimize = { [weak self] minimize in
+            self?.updateMinimize(minimize)
         }
         statusBarController.onSelectIconStyle = { [weak self] iconStyle in
             self?.updateIconStyle(iconStyle)
@@ -94,6 +98,17 @@ final class AppController {
     private func updateHideEmptySpaces(_ hideEmptySpaces: Bool) {
         renderOptions.hideEmptySpaces = hideEmptySpaces
         configStore.update { $0.hideEmptySpaces = hideEmptySpaces }
+
+        guard let snapshot = snapshotStore.snapshot else {
+            return
+        }
+
+        showSnapshot(snapshot)
+    }
+
+    private func updateMinimize(_ minimize: Bool) {
+        renderOptions.minimize = minimize
+        configStore.update { $0.minimize = minimize }
 
         guard let snapshot = snapshotStore.snapshot else {
             return

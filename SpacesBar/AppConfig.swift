@@ -28,11 +28,13 @@ enum IconStyle: String, Codable, CaseIterable, Sendable {
 
 struct AppConfig: Codable, Equatable, Sendable {
     var hideEmptySpaces: Bool
+    var minimize: Bool
     var iconStyle: IconStyle
     var refreshFallbackSeconds: TimeInterval
 
     static let `default` = AppConfig(
         hideEmptySpaces: false,
+        minimize: false,
         iconStyle: .colored,
         refreshFallbackSeconds: 5
     )
@@ -40,9 +42,30 @@ struct AppConfig: Codable, Equatable, Sendable {
     var validated: AppConfig {
         AppConfig(
             hideEmptySpaces: hideEmptySpaces,
+            minimize: minimize,
             iconStyle: iconStyle,
             refreshFallbackSeconds: max(1, refreshFallbackSeconds)
         )
+    }
+}
+
+extension AppConfig {
+    private enum CodingKeys: String, CodingKey {
+        case hideEmptySpaces
+        case minimize
+        case iconStyle
+        case refreshFallbackSeconds
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        hideEmptySpaces = try container.decodeIfPresent(Bool.self, forKey: .hideEmptySpaces) ?? Self.default.hideEmptySpaces
+        minimize = try container.decodeIfPresent(Bool.self, forKey: .minimize) ?? Self.default.minimize
+        iconStyle = try container.decodeIfPresent(IconStyle.self, forKey: .iconStyle) ?? Self.default.iconStyle
+        refreshFallbackSeconds = try container.decodeIfPresent(
+            TimeInterval.self,
+            forKey: .refreshFallbackSeconds
+        ) ?? Self.default.refreshFallbackSeconds
     }
 }
 

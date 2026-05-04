@@ -5,8 +5,10 @@ final class StatusBarController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var currentTitle = "Loading..."
     var onToggleHideEmptySpaces: ((Bool) -> Void)?
+    var onToggleMinimize: ((Bool) -> Void)?
     var onSelectIconStyle: ((IconStyle) -> Void)?
     private weak var hideEmptySpacesItem: NSMenuItem?
+    private weak var minimizeItem: NSMenuItem?
     private var iconStyleItems: [IconStyle: NSMenuItem] = [:]
 
     func install(config: AppConfig) {
@@ -18,6 +20,14 @@ final class StatusBarController: NSObject {
         )
         hideEmptySpacesItem.target = self
         hideEmptySpacesItem.state = config.hideEmptySpaces ? .on : .off
+
+        let minimizeItem = NSMenuItem(
+            title: "Minimize",
+            action: #selector(toggleMinimize),
+            keyEquivalent: ""
+        )
+        minimizeItem.target = self
+        minimizeItem.state = config.minimize ? .on : .off
 
         let iconStyleItem = NSMenuItem(title: "Icon Style", action: nil, keyEquivalent: "")
         let iconStyleMenu = NSMenu()
@@ -42,10 +52,19 @@ final class StatusBarController: NSObject {
         )
         copyItem.target = self
 
+        let githubItem = NSMenuItem(
+            title: "View SpacesBar on GitHub",
+            action: #selector(openGitHubRepository),
+            keyEquivalent: ""
+        )
+        githubItem.target = self
+
         menu.addItem(hideEmptySpacesItem)
+        menu.addItem(minimizeItem)
         menu.addItem(iconStyleItem)
         menu.addItem(.separator())
         menu.addItem(copyItem)
+        menu.addItem(githubItem)
         menu.addItem(.separator())
         menu.addItem(
             withTitle: "Quit SpacesBar",
@@ -57,6 +76,7 @@ final class StatusBarController: NSObject {
         statusItem.button?.title = currentTitle
         statusItem.button?.toolTip = currentTitle
         self.hideEmptySpacesItem = hideEmptySpacesItem
+        self.minimizeItem = minimizeItem
     }
 
     func show(title: String) {
@@ -94,6 +114,17 @@ final class StatusBarController: NSObject {
     }
 
     @objc
+    private func toggleMinimize() {
+        guard let minimizeItem else {
+            return
+        }
+
+        let nextState: NSControl.StateValue = minimizeItem.state == .on ? .off : .on
+        minimizeItem.state = nextState
+        onToggleMinimize?(nextState == .on)
+    }
+
+    @objc
     private func selectIconStyle(_ sender: NSMenuItem) {
         guard
             let rawValue = sender.representedObject as? String,
@@ -107,5 +138,14 @@ final class StatusBarController: NSObject {
         }
 
         onSelectIconStyle?(selectedStyle)
+    }
+
+    @objc
+    private func openGitHubRepository() {
+        guard let url = URL(string: "https://github.com/alber70g/spacesbar") else {
+            return
+        }
+
+        NSWorkspace.shared.open(url)
     }
 }

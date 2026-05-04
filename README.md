@@ -1,5 +1,7 @@
 # SpacesBar
 
+<i>Full disclosure: I'm not a Swift dev, I mostly vibe-coded this</i>
+
 Lightweight macOS menu bar app that shows which apps are active on which macOS space. Relies on [yabai](https://github.com/koekeishiya/yabai) as its backend.
 
 `1 [Chrome] [WhatsApp]  2 [VS Code] [iTerm2]  5 [LM Studio]`
